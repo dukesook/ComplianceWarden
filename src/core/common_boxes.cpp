@@ -2,6 +2,7 @@
 #include "common_boxes.h"
 
 #include <cassert>
+#include <cstring>
 #include <vector>
 
 #include "fourcc.h"
@@ -11,7 +12,7 @@ void parseIacb(IReader *br);
 
 std::string toString(uint32_t fourcc)
 {
-  char fourccStr[5] = {};
+  char fourccStr[5] = { };
   snprintf(
     fourccStr, 5, "%c%c%c%c", (fourcc >> 24) & 0xff, (fourcc >> 16) & 0xff, (fourcc >> 8) & 0xff, (fourcc >> 0) & 0xff);
   return fourccStr;
@@ -513,7 +514,7 @@ void parseAuxc(IReader *br)
   br->sym("version", 8);
   br->sym("flags", 24);
 
-  while(br->sym("aux_type", 8)) {}
+  while(br->sym("aux_type", 8)) { }
 
   while(!br->empty())
     br->sym("aux_subtype", 8);
@@ -915,6 +916,22 @@ void parseTrun(IReader *br)
   }
 }
 
+void parseUuid(IReader *br)
+{
+  uint8_t extended_type[16];
+  for(int i = 0; i < 16; ++i)
+    extended_type[i] = br->sym("extended_type", 8);
+
+  ParseBoxFunc *func = getUuidParseFunction(extended_type);
+  func(br);
+}
+
+void parseItemContentIDProperty(IReader *br)
+{
+  while(!br->empty())
+    br->sym("ItemContentID", 8);
+}
+
 void parseChildren(IReader *br)
 {
   while(!br->empty())
@@ -1052,10 +1069,21 @@ ParseBoxFunc *getParseFunction(uint32_t fourcc)
     return &parseTrex;
   case FOURCC("trun"):
     return &parseTrun;
+  case FOURCC("uuid"):
+    return &parseUuid;
   }
 
   if(isVisualSampleEntry(fourcc))
     return &parseVisualSampleEntry;
 
   return &parseRaw;
+}
+
+ParseBoxFunc *getUuidParseFunction(const uint8_t (&extended_type)[16])
+{
+  if(std::memcmp(extended_type, ItemContentIDProperty, 16) == 0) {
+    return &parseItemContentIDProperty;
+  } else {
+    return &parseRaw;
+  }
 }
