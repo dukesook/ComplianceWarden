@@ -230,8 +230,8 @@ void parseAvcC(IReader *br)
   if(AVCProfileIndication != 66 && AVCProfileIndication != 77 && AVCProfileIndication != 88) {
     if(br->empty()) {
       // Call fprintf() because catch(...) will not print the error message
-      fprintf(stderr, "AVCProfileIndiciation is not 66, 77, or 88, so profile code is expected, but missing.\n");
-      throw std::runtime_error("AVCProfileIndiciation is not 66, 77, or 88, so profile code is expected, but missing.");
+      fprintf(stderr, "AVCProfileIndication is not 66, 77, or 88, so profile code is expected, but missing.\n");
+      throw std::runtime_error("AVCProfileIndication is not 66, 77, or 88, so profile code is expected, but missing.");
     }
     br->sym("reserved9", 6);
     br->sym("chroma_format", 2);
